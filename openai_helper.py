@@ -3,15 +3,20 @@ import json
 import pandas as pd
 import streamlit as st
 
+# OpenAI API की सेट करा
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def extract_financial_data(text):
     prompt = get_prompt_financial() + text
-    response = openai.ChatCompletion.create(
+    
+    # नवीन API पद्धत वापरा: openai.chat.completions.create
+    response = openai.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[{"role": "user", "content": prompt}]
     )
-    content = response.choices[0]['message']['content']
+    
+    # नवीन पद्धतीने रिस्पॉन्स मिळवा
+    content = response.choices[0].message.content
 
     try:
         data = json.loads(content)

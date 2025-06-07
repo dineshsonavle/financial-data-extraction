@@ -2,27 +2,38 @@ import openai
 import json
 import pandas as pd
 import streamlit as st
+import time
 
-# OpenAI API की सेट करा
 openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 def extract_financial_data(text):
     prompt = get_prompt_financial() + text
-    
-    # नवीन API पद्धत वापरा: openai.chat.completions.create
-    response = openai.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}]
-    )
-    
-    # नवीन पद्धतीने रिस्पॉन्स मिळवा
-    content = response.choices[0].message.content
 
-    try:
-        data = json.loads(content)
-        return pd.DataFrame(data.items(), columns=["Measure", "Value"])
-    except (json.JSONDecodeError, IndexError):
-        pass
+    retries = 5
+    delay = 2  # seconds
+
+    for attempt in range(retries):
+        try:
+            response = openai.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[{"role": "user", "content": prompt}]
+            )
+            content = response.choices[0].message.content
+
+            try:
+                data = json.loads(content)
+                return pd.DataFrame(data.items(), columns=["Measure", "Value"])
+            except json.JSONDecodeError:
+                st.error("❌ Invalid JSON format in response.")
+                break
+
+        except openai.RateLimitError:
+            st.warning(f"⏳ Rate limit exceeded. Retrying in {delay} seconds...")
+            time.sleep(delay)
+            delay *= 2
+        except openai.OpenAIError as e:
+            st.error(f"💥 OpenAI API Error: {str(e)}")
+            break
 
     return pd.DataFrame({
         "Measure": ["Company Name", "Stock Symbol", "Revenue", "Net Income", "EPS"],

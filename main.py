@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import openai_helper
+import grok_helper  # <<-- फक्त हाच बदल आहे
 
 col1, col2 = st.columns([3,2])
 
@@ -13,7 +13,7 @@ with col1:
     st.title("Data Extraction Tool")
     news_article = st.text_area("Paste your financial news article here", height=300)
     if st.button("Extract"):
-        financial_data_df = openai_helper.extract_financial_data(news_article)
+        financial_data_df = grok_helper.extract_financial_data(news_article)  # <<-- हेही adjust केलं आहे
 
 with col2:
     st.markdown("<br/>" * 5, unsafe_allow_html=True)  # Creates 5 lines of vertical space
